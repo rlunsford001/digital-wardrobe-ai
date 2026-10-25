@@ -91,6 +91,28 @@ footer{text-align:center;padding:30px;color:#999;font-size:12px}
 header{padding:18px}
 .auth{margin:30px 15px 70px;padding:24px}
 }
+
+/* ATELIER v4.1 */
+.add-methods{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap}
+.add-methods button{flex:1;min-width:130px}
+.add-methods button.selected{background:#202124;color:white;border-color:#202124}
+.search-add{border:1px solid var(--line);border-radius:14px;padding:20px;margin:15px 0;background:#fdfcfb}
+.search-add .search-row{display:flex;gap:8px;flex-wrap:wrap}
+.search-add .search-row input{flex:1;min-width:150px}
+.search-add h3{font:normal 23px Georgia,serif;margin:0 0 8px}
+.search-add label{font-size:12px;color:#777;display:block;margin-top:13px}
+.search-add .manual-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.search-add .manual-fields input,.search-add .manual-fields select{width:100%}
+.item-title{font-size:14px;font-weight:bold;line-height:1.4;overflow-wrap:anywhere}
+.item-meta{font-size:12px;color:#777;line-height:1.6}
+.item-edit{display:grid;gap:7px;padding-top:8px;border-top:1px solid var(--line)}
+.item-edit label{font-size:11px;color:#777}
+.item-edit input,.item-edit select{width:100%}
+.item-photo-placeholder{height:190px;background:#f3f1ed;display:grid;place-items:center;color:#a08e77;font:normal 44px Georgia,serif}
+@media(max-width:550px){
+.search-add .manual-fields{grid-template-columns:1fr}
+.item-photo-placeholder{height:150px}
+}
 </style>
 </head>
 <body>
@@ -168,6 +190,12 @@ header{padding:18px}
 <button class="primary" id="styleBtn">✦ Create an outfit</button>
 </div>
 
+<div class="add-methods">
+<button id="uploadMethod" class="selected" type="button">+ Upload photo</button>
+<button id="searchMethod" type="button">⌕ Search clothing</button>
+</div>
+
+<div id="uploadSection">
 <label class="upload">
 <span class="upload-icon">+</span>
 <span>
@@ -176,6 +204,34 @@ header{padding:18px}
 </span>
 <input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
 </label>
+</div>
+
+<div id="searchSection" class="search-add" hidden>
+<h3>Find your piece.</h3>
+<p class="muted">Search for the exact item online, then add its details to your wardrobe.</p>
+<div class="search-row">
+<input id="productQuery" type="search" placeholder="e.g. Nike Tech Fleece hoodie">
+<button id="productSearch" type="button">Search Google Shopping</button>
+</div>
+<p class="muted">For now, search opens in a new tab. Automatic product results inside ATELIER are coming later.</p>
+<div class="manual-fields">
+<div><label for="manualBrand">Brand</label><input id="manualBrand" placeholder="Nike"></div>
+<div><label for="manualType">Clothing type</label><input id="manualType" placeholder="Hoodie"></div>
+<div><label for="manualColor">Color</label><input id="manualColor" placeholder="Black"></div>
+<div><label for="manualPattern">Pattern</label><input id="manualPattern" placeholder="Solid"></div>
+<div><label for="manualCategory">Category</label>
+<select id="manualCategory">
+<option value="top">Top</option>
+<option value="bottom">Bottom</option>
+<option value="shoes">Shoes</option>
+<option value="outerwear">Outerwear</option>
+<option value="accessory">Accessory</option>
+</select></div>
+<div><label for="manualName">Item name (optional)</label><input id="manualName" placeholder="Nike - Hoodie"></div>
+</div>
+<p class="muted">You can add the item now and upload its photo later.</p>
+<button id="manualAdd" class="primary" type="button">Add to my wardrobe</button>
+</div>
 
 <div class="toolbar">
 <select id="filter" aria-label="Filter clothing">
@@ -186,7 +242,7 @@ header{padding:18px}
 <option value="outerwear">Outerwear</option>
 <option value="accessory">Accessories</option>
 </select>
-<span class="muted">Edit item names and categories anytime.</span>
+<span class="muted">Edit your clothing details anytime.</span>
 </div>
 
 <div id="items" class="grid"></div>
@@ -357,7 +413,7 @@ if(next==='demo'){
 clothes=demoLoad();
 $('closetEyebrow').textContent='DEMO / YOUR PLAYGROUND';
 $('sideNote').textContent='Demo photos stay in this browser. Create an account to start a private cloud wardrobe.';
-$('closetNotice').textContent='Demo mode: images are stored in this browser only. Your existing ATELIER wardrobe is untouched. Demo items do not automatically transfer to an account.';
+$('closetNotice').textContent='Demo mode: your items are stored in this browser only. Your original ATELIER wardrobe is untouched.';
 $('exitBtn').textContent='Leave demo';
 }else{
 if(!user){
@@ -367,7 +423,7 @@ return;
 clothes=[];
 $('closetEyebrow').textContent='YOUR PRIVATE COLLECTION';
 $('sideNote').textContent='Signed in as '+user.email;
-$('closetNotice').textContent='Your account wardrobe is stored privately in Supabase. Existing browser-only ATELIER items have not yet been imported.';
+$('closetNotice').textContent='Your account wardrobe is stored privately in Supabase.';
 $('exitBtn').textContent='Log out';
 }
 
@@ -477,6 +533,121 @@ Object.assign(piece,patch);
 }
 }
 
+/* ADD CLOTHING METHODS */
+
+$('uploadMethod').onclick=()=>{
+$('uploadMethod').classList.add('selected');
+$('searchMethod').classList.remove('selected');
+$('uploadSection').hidden=false;
+$('searchSection').hidden=true;
+};
+
+$('searchMethod').onclick=()=>{
+$('searchMethod').classList.add('selected');
+$('uploadMethod').classList.remove('selected');
+$('searchSection').hidden=false;
+$('uploadSection').hidden=true;
+};
+
+$('productSearch').onclick=()=>{
+const query=$('productQuery').value.trim();
+
+if(!query){
+msg('Enter a clothing item to search for.');
+return;
+}
+
+window.open(
+'https://www.google.com/search?tbm=shop&q='+encodeURIComponent(query),
+'_blank',
+'noopener,noreferrer'
+);
+};
+
+$('productQuery').onkeydown=event=>{
+if(event.key==='Enter'){
+event.preventDefault();
+$('productSearch').click();
+}
+};
+
+$('manualAdd').onclick=async()=>{
+if(busy)return;
+
+const brand=$('manualBrand').value.trim()||'Unknown';
+const type=$('manualType').value.trim();
+const color=$('manualColor').value.trim()||'Unknown';
+const pattern=$('manualPattern').value.trim()||'Unknown';
+const category=$('manualCategory').value;
+const name=$('manualName').value.trim()||
+(brand==='Unknown'?type:brand+' - '+type);
+
+if(!type){
+msg('Enter the clothing type first.');
+return;
+}
+
+busy=true;
+$('manualAdd').disabled=true;
+
+try{
+if(mode==='demo'){
+const piece={
+id:crypto.randomUUID(),
+name,
+brand,
+type,
+color,
+pattern,
+category,
+photos:[]
+};
+
+clothes.push(piece);
+
+if(!demoSave()){
+clothes.pop();
+throw Error('Browser storage full.');
+}
+
+render();
+}else{
+const {error}=await client
+.from('wardrobe_items')
+.insert({
+user_id:user.id,
+name,
+brand,
+type,
+color,
+pattern,
+category,
+photos:[]
+});
+
+if(error)throw error;
+
+await loadCloud();
+}
+
+for(const id of [
+'manualBrand','manualType','manualColor',
+'manualPattern','manualName'
+]){
+$(id).value='';
+}
+
+msg('Added to your wardrobe!');
+}catch(error){
+msg(error.message||'Could not add clothing.');
+}finally{
+busy=false;
+$('manualAdd').disabled=false;
+}
+};
+
+/* CLEANER CLOTHING CARDS */
+
 function render(){
 const root=$('items');
 root.replaceChildren();
@@ -494,51 +665,150 @@ shown.forEach(piece=>{
 const card=document.createElement('article');
 card.className='item';
 
-const img=document.createElement('img');
-img.src=photoSrc(piece.photos?.[piece.photoIndex||0]||piece.photos?.[0]||piece.image)||'';
+const photos=Array.isArray(piece.photos)?piece.photos:[];
+const imagePath=photos[piece.photoIndex||0]||photos[0]||piece.image;
+
+let img=null;
+
+if(imagePath){
+img=document.createElement('img');
+img.src=photoSrc(imagePath);
 img.alt=piece.name||'Clothing item';
+card.append(img);
+}else{
+const placeholder=document.createElement('div');
+placeholder.className='item-photo-placeholder';
+placeholder.textContent='A';
+card.append(placeholder);
+}
 
 const body=document.createElement('div');
 body.className='itembody';
 
-const name=document.createElement('input');
-name.type='text';
-name.value=piece.name||'';
-name.maxLength=50;
-name.setAttribute('aria-label','Item name');
-name.onchange=()=>updatePiece(piece,{
-name:name.value.trim()||'Clothing item'
-});
+const title=document.createElement('div');
+title.className='item-title';
+title.textContent=piece.name||
+[piece.brand,piece.type].filter(Boolean).join(' - ')||
+'Clothing item';
 
-const type=document.createElement('input');
-type.type='text';
-type.value=piece.type||'Uncategorized';
-type.maxLength=40;
-type.setAttribute('aria-label','Clothing type');
-type.onchange=()=>updatePiece(piece,{
-type:type.value.trim()||'Uncategorized'
-});
-
-const cat=optionSelect(
-CATS.map(c=>[c,c[0].toUpperCase()+c.slice(1)]),
-piece.category,
-value=>updatePiece(piece,{category:value}).then(render)
-);
-
-cat.setAttribute('aria-label','Category');
+const meta=document.createElement('div');
+meta.className='item-meta';
+meta.textContent=[
+piece.color,
+piece.pattern,
+piece.category
+].filter(Boolean).map(value=>
+value.charAt(0).toUpperCase()+value.slice(1)
+).join(' · ');
 
 const count=document.createElement('span');
 count.className='photo-count';
-count.textContent=`${piece.photos?.length||0} photo(s)`;
+count.textContent=
+`${photos.length} photo${photos.length===1?'':'s'}`;
 
 const actions=document.createElement('div');
 actions.className='actions';
 
+const edit=document.createElement('button');
+edit.textContent='Edit';
+
+const editor=document.createElement('div');
+editor.className='item-edit';
+editor.hidden=true;
+
+const fields=[
+['name','Item name'],
+['brand','Brand'],
+['type','Clothing type'],
+['color','Color'],
+['pattern','Pattern']
+];
+
+const inputs={};
+
+fields.forEach(([key,label])=>{
+const wrapper=document.createElement('div');
+
+const labelElement=document.createElement('label');
+labelElement.textContent=label;
+
+const input=document.createElement('input');
+input.type='text';
+input.value=piece[key]||'';
+input.maxLength=100;
+input.setAttribute('aria-label',label);
+
+inputs[key]=input;
+wrapper.append(labelElement,input);
+editor.append(wrapper);
+});
+
+const categoryLabel=document.createElement('label');
+categoryLabel.textContent='Category';
+
+const categorySelect=optionSelect(
+CATS.map(c=>[c,c.charAt(0).toUpperCase()+c.slice(1)]),
+piece.category||'top',
+()=>{}
+);
+
+editor.append(categoryLabel,categorySelect);
+
+const save=document.createElement('button');
+save.className='primary';
+save.textContent='Save changes';
+
+const cancel=document.createElement('button');
+cancel.textContent='Cancel';
+
+save.onclick=async()=>{
+const patch={};
+
+fields.forEach(([key])=>{
+patch[key]=inputs[key].value.trim();
+});
+
+patch.category=categorySelect.value;
+
+if(!patch.type){
+msg('Clothing type cannot be empty.');
+return;
+}
+
+if(!patch.name){
+patch.name=[patch.brand,patch.type]
+.filter(Boolean).join(' - ');
+}
+
+save.disabled=true;
+
+try{
+await updatePiece(piece,patch);
+render();
+}catch(error){
+msg(error.message||'Could not save changes.');
+save.disabled=false;
+}
+};
+
+cancel.onclick=()=>{
+editor.hidden=true;
+edit.textContent='Edit';
+};
+
+editor.append(save,cancel);
+
+edit.onclick=()=>{
+editor.hidden=!editor.hidden;
+edit.textContent=editor.hidden?'Edit':'Close editor';
+};
+
 const next=document.createElement('button');
 next.textContent='Next photo';
+next.hidden=photos.length<2;
+
 next.onclick=()=>{
-const photos=piece.photos||[];
-if(!photos.length)return;
+if(!photos.length||!img)return;
 piece.photoIndex=((piece.photoIndex||0)+1)%photos.length;
 img.src=photoSrc(photos[piece.photoIndex]);
 };
@@ -568,11 +838,11 @@ throw Error('Browser storage full.');
 }
 }else{
 const path=await uploadPhoto(photo);
-const photos=[...(piece.photos||[]),path];
+const newPhotos=[...(piece.photos||[]),path];
 
 const {error}=await client
 .from('wardrobe_items')
-.update({photos})
+.update({photos:newPhotos})
 .eq('id',piece.id)
 .eq('user_id',user.id);
 
@@ -581,7 +851,7 @@ await client.storage.from('wardrobe-photos').remove([path]);
 throw error;
 }
 
-piece.photos=photos;
+piece.photos=newPhotos;
 await refreshUrls();
 }
 
@@ -636,12 +906,14 @@ await client.storage.from('wardrobe-photos').remove(paths);
 await loadCloud();
 };
 
-actions.append(next,add,del,file);
-body.append(name,type,cat,count,actions);
-card.append(img,body);
+actions.append(edit,next,add,del,file);
+body.append(title,meta,count,actions,editor);
+card.append(body);
 root.append(card);
 });
 }
+
+/* PHOTO UPLOAD HELPERS */
 
 function resize(file){
 return new Promise((resolve,reject)=>{
@@ -819,18 +1091,23 @@ await openCloset('cloud');
 })();
 </script>
 
+<!-- GEMINI AI LOADING ANIMATION -->
+
 <style>
 .item .ai-photo-wrap {
   position: relative;
   overflow: hidden;
 }
+
 .item .ai-photo-wrap img {
   transition: filter .7s ease, opacity .7s ease;
 }
+
 .item.ai-loading .ai-photo-wrap img {
   filter: grayscale(1) brightness(.75);
   opacity: .45;
 }
+
 .ai-photo-overlay {
   position: absolute;
   inset: 0;
@@ -844,6 +1121,7 @@ await openCloset('cloud');
   font-size: 12px;
   font-weight: bold;
 }
+
 .ai-spinner {
   width: 28px;
   height: 28px;
@@ -852,16 +1130,20 @@ await openCloset('cloud');
   border-radius: 50%;
   animation: aiSpin 1s linear infinite;
 }
+
 @keyframes aiSpin {
   to { transform: rotate(360deg); }
 }
+
 .item.ai-unlocked img {
   animation: aiUnlock .8s ease;
 }
+
 @keyframes aiUnlock {
   from { filter: grayscale(1); opacity: .45; }
   to { filter: none; opacity: 1; }
 }
+
 .ai-details {
   font-size: 12px;
   color: #777;
@@ -918,18 +1200,6 @@ await openCloset('cloud');
         retry.textContent = '↻ Retry AI';
         retry.onclick = () => analyze(piece);
         card.querySelector('.actions')?.append(retry);
-      }
-
-      if (state === 'done') {
-        const details = document.createElement('div');
-        details.className = 'ai-details';
-        details.textContent = [
-          piece.color,
-          piece.pattern,
-          piece.brand
-        ].filter(Boolean).join(' · ');
-
-        card.querySelector('.itembody')?.append(details);
       }
     });
   }
@@ -1018,6 +1288,7 @@ await openCloset('cloud');
 
       if (!photo) {
         const path = piece.photos?.[0];
+        if (!path) throw Error('No photo available for AI.');
 
         if (startingMode === 'demo') {
           photo = path;
