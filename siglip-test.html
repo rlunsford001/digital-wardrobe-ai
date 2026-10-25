@@ -171,7 +171,7 @@ input.addEventListener('change', async () => {
     classifier ??= await pipeline(
       'zero-shot-image-classification',
       MODEL,
-    { dtype: 'fp32', device: 'wasm' }
+      { dtype: 'fp32', device: 'wasm' }
     );
 
     status.textContent = 'Analyzing clothing...';
@@ -182,8 +182,7 @@ input.addEventListener('change', async () => {
 
     const output = await classifier(
       imageUrl,
-      descriptions,
-      { top_k: 5 }
+      descriptions
     );
 
     const formatted = output.map(item => ({
