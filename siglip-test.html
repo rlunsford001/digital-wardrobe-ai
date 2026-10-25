@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATELIER — SigLIP2 Test</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: auto;
+    padding: 30px;
+  }
+  #preview {
+    display: none;
+    max-width: 250px;
+    max-height: 300px;
+    object-fit: contain;
+    margin-top: 15px;
+  }
+  .result {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  .result strong {
+    display: block;
+    margin-bottom: 6px;
+  }
+  .bar {
+    height: 8px;
+    background: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .fill {
+    height: 100%;
+    background: #222;
+  }
+  .note {
+    color: #666;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<h2>ATELIER — SigLIP2 Test</h2>
+<p>Upload a clothing photo to test the new AI model.</p>
+
+<input type="file" id="photo" accept="image/*">
+<img id="preview" alt="Uploaded clothing">
+<p id="status">Waiting for photo...</p>
+<div id="results"></div>
+
+<script type="module">
+import { pipeline, env } from
+  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+const MODEL =
+  'onnx-community/siglip2-base-patch16-224-ONNX';
+
+env.allowLocalModels = false;
+
+const input = document.getElementById('photo');
+const preview = document.getElementById('preview');
+const status = document.getElementById('status');
+const results = document.getElementById('results');
+
+let classifier;
+
+const categories = [
+  'hoodie',
+  't-shirt',
+  'long sleeve shirt',
+  'crewneck sweatshirt',
+  'sweater',
+  'cardigan',
+  'tank top',
+  'crop top',
+  'blouse',
+  'button-up shirt',
+  'polo shirt',
+  'sweatpants',
+  'joggers',
+  'jeans',
+  'cargo pants',
+  'trousers',
+  'leggings',
+  'yoga pants',
+  'shorts',
+  'athletic shorts',
+  'skirt',
+  'mini skirt',
+  'maxi skirt',
+  'dress',
+  'mini dress',
+  'maxi dress',
+  'jumpsuit',
+  'romper',
+  'overalls',
+  'jacket',
+  'denim jacket',
+  'leather jacket',
+  'blazer',
+  'coat',
+  'vest',
+  'sneakers',
+  'boots',
+  'heels',
+  'sandals',
+  'flats',
+  'loafers',
+  'dress shoes',
+  'hat',
+  'beanie',
+  'scarf',
+  'belt',
+  'handbag',
+  'backpack'
+];
+
+function showResults(items) {
+  results.replaceChildren();
+
+  items.slice(0, 5).forEach(item => {
+    const percent = (item.score * 100).toFixed(1);
+
+    const div = document.createElement('div');
+    div.className = 'result';
+
+    const heading = document.createElement('strong');
+    heading.textContent =
+      item.label.toUpperCase() + ' — ' + percent + '%';
+
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+
+    const fill = document.createElement('div');
+    fill.className = 'fill';
+    fill.style.width = percent + '%';
+
+    bar.appendChild(fill);
+    div.append(heading, bar);
+    results.appendChild(div);
+  });
+
+  const note = document.createElement('p');
+  note.className = 'note';
+  note.textContent =
+    'Experimental predictions. Scores compare the listed ' +
+    'categories and do not represent guaranteed accuracy.';
+  results.appendChild(note);
+}
+
+input.addEventListener('change', async () => {
+  const file = input.files[0];
+  if (!file) return;
+
+  input.disabled = true;
+  results.replaceChildren();
+
+  const imageUrl = URL.createObjectURL(file);
+  preview.src = imageUrl;
+  preview.style.display = 'block';
+
+  try {
+    status.textContent =
+      'Loading SigLIP2 AI model. First load may take several minutes...';
+
+    classifier ??= await pipeline(
+      'zero-shot-image-classification',
+      MODEL,
+      { dtype: 'q4f16', device: 'wasm' }
+    );
+
+    status.textContent = 'Analyzing clothing...';
+
+    const descriptions = categories.map(
+      name => 'a photo of ' + name + ' clothing'
+    );
+
+    const output = await classifier(
+      imageUrl,
+      descriptions,
+      { top_k: 5 }
+    );
+
+    const formatted = output.map(item => ({
+      label: item.label.replace('a photo of ', '')
+                       .replace(/ clothing$/, ''),
+      score: item.score
+    }));
+
+    status.textContent = 'Analysis complete!';
+    showResults(formatted);
+
+  } catch (error) {
+    status.textContent = 'Error: ' + error.message;
+    console.error(error);
+  } finally {
+    input.disabled = false;
+    URL.revokeObjectURL(imageUrl);
+  }
+});
+</script>
+</body>
+</html>
