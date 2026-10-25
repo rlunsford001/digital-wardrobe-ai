@@ -818,5 +818,311 @@ await openCloset('cloud');
 }
 })();
 </script>
+
+<style>
+.item .ai-photo-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.item .ai-photo-wrap img {
+  transition: filter .7s ease, opacity .7s ease;
+}
+.item.ai-loading .ai-photo-wrap img {
+  filter: grayscale(1) brightness(.75);
+  opacity: .45;
+}
+.ai-photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(245, 243, 239, .25);
+  color: #77654d;
+  font-size: 12px;
+  font-weight: bold;
+}
+.ai-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #ddd1c0;
+  border-top-color: #a78b67;
+  border-radius: 50%;
+  animation: aiSpin 1s linear infinite;
+}
+@keyframes aiSpin {
+  to { transform: rotate(360deg); }
+}
+.item.ai-unlocked img {
+  animation: aiUnlock .8s ease;
+}
+@keyframes aiUnlock {
+  from { filter: grayscale(1); opacity: .45; }
+  to { filter: none; opacity: 1; }
+}
+.ai-details {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.6;
+}
+</style>
+
+<script>
+(() => {
+  const AI_ENDPOINT =
+    'https://atelier-ai.rlunsford001.workers.dev';
+
+  const states = new Map();
+  const originalRender = render;
+
+  function decorateCards() {
+    const cards = [...document.querySelectorAll('#items .item')];
+    const visible = clothes.filter(item =>
+      $('filter').value === 'all' ||
+      item.category === $('filter').value
+    );
+
+    cards.forEach((card, index) => {
+      const piece = visible[index];
+      if (!piece) return;
+
+      const state = states.get(String(piece.id));
+      const img = card.querySelector('img');
+      if (!img) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'ai-photo-wrap';
+      img.replaceWith(wrap);
+      wrap.append(img);
+
+      if (state === 'loading') {
+        card.classList.add('ai-loading');
+
+        const overlay = document.createElement('div');
+        overlay.className = 'ai-photo-overlay';
+        overlay.innerHTML = `
+          <div class="ai-spinner"></div>
+          <span>Identifying your piece...</span>
+        `;
+        wrap.append(overlay);
+      }
+
+      if (state === 'done') {
+        card.classList.add('ai-unlocked');
+      }
+
+      if (state === 'failed') {
+        const retry = document.createElement('button');
+        retry.textContent = '↻ Retry AI';
+        retry.onclick = () => analyze(piece);
+        card.querySelector('.actions')?.append(retry);
+      }
+
+      if (state === 'done') {
+        const details = document.createElement('div');
+        details.className = 'ai-details';
+        details.textContent = [
+          piece.color,
+          piece.pattern,
+          piece.brand
+        ].filter(Boolean).join(' · ');
+
+        card.querySelector('.itembody')?.append(details);
+      }
+    });
+  }
+
+  render = function() {
+    originalRender();
+    decorateCards();
+  };
+
+  function parseAI(result) {
+    let data = result;
+
+    for (let i = 0; i < 4; i++) {
+      if (typeof data === 'string') {
+        const match = data.match(/\{[\s\S]*\}/);
+        if (!match) break;
+        data = JSON.parse(match[0]);
+        continue;
+      }
+
+      if (data && typeof data === 'object') {
+        const nested =
+          data.result ||
+          data.analysis ||
+          data.clothing ||
+          data.item ||
+          data.data;
+
+        if (nested && typeof nested === 'object') {
+          data = nested;
+          continue;
+        }
+      }
+      break;
+    }
+
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid AI response');
+    }
+
+    const patch = {};
+
+    for (const key of [
+      'name', 'type', 'category',
+      'color', 'pattern', 'brand'
+    ]) {
+      if (typeof data[key] === 'string' && data[key].trim()) {
+        patch[key] = data[key].trim();
+      }
+    }
+
+    if (!patch.name && patch.type) {
+      patch.name =
+        [patch.color, patch.type].filter(Boolean).join(' ');
+    }
+
+    if (patch.category) {
+      const category = patch.category.toLowerCase();
+
+      if (CATS.includes(category)) {
+        patch.category = category;
+      } else {
+        delete patch.category;
+      }
+    }
+
+    if (!Object.keys(patch).length) {
+      throw new Error('AI returned no clothing details');
+    }
+
+    return patch;
+  }
+
+  async function analyze(piece, suppliedPhoto) {
+    const id = String(piece.id);
+    if (states.get(id) === 'loading') return;
+
+    const startingMode = mode;
+    const startingUser = user?.id;
+
+    states.set(id, 'loading');
+    render();
+
+    try {
+      let photo = suppliedPhoto;
+
+      if (!photo) {
+        const path = piece.photos?.[0];
+
+        if (startingMode === 'demo') {
+          photo = path;
+        } else {
+          const { data, error } = await client.storage
+            .from('wardrobe-photos')
+            .createSignedUrl(path, 3600);
+
+          if (error) throw error;
+
+          const response = await fetch(data.signedUrl);
+          const blob = await response.blob();
+
+          photo = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+
+      const response = await fetch(AI_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          image: photo,
+          imageBase64: photo.split(',')[1],
+          mimeType: 'image/jpeg'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('AI error: ' + response.status);
+      }
+
+      const result = await response.json();
+      const patch = parseAI(result);
+
+      if (mode !== startingMode) return;
+      if (startingMode === 'cloud' && user?.id !== startingUser) return;
+
+      const current = clothes.find(
+        item => String(item.id) === id
+      );
+
+      if (!current) return;
+
+      await updatePiece(current, patch);
+
+      states.set(id, 'done');
+      render();
+
+    } catch (error) {
+      console.error('ATELIER AI:', error);
+      states.set(id, 'failed');
+      render();
+    }
+  }
+
+  const uploadInput = document.getElementById('photos');
+
+  uploadInput.addEventListener('change', async event => {
+    const firstFile = event.target.files?.[0];
+    if (!firstFile || busy) return;
+
+    const startingMode = mode;
+    const existingIds = new Set(
+      clothes.map(item => String(item.id))
+    );
+
+    let photo;
+
+    try {
+      photo = await resize(firstFile);
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+
+    let attempts = 0;
+
+    const watcher = setInterval(() => {
+      attempts++;
+
+      if (mode !== startingMode || attempts > 120) {
+        clearInterval(watcher);
+        return;
+      }
+
+      const newPiece = clothes.find(
+        item => !existingIds.has(String(item.id))
+      );
+
+      if (newPiece) {
+        clearInterval(watcher);
+        analyze(newPiece, photo);
+      }
+    }, 500);
+  }, true);
+
+})();
+</script>
+
 </body>
 </html>
