@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATELIER — CLIP Test</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  max-width: 700px;
+  margin: auto;
+  padding: 30px;
+}
+#preview {
+  display: none;
+  max-width: 250px;
+  max-height: 300px;
+  object-fit: contain;
+  margin-top: 15px;
+}
+.result {
+  padding: 12px 0;
+  border-bottom: 1px solid #ddd;
+}
+.result strong {
+  display: block;
+  margin-bottom: 6px;
+}
+.bar {
+  height: 8px;
+  background: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  background: #222;
+}
+.note {
+  color: #666;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<h2>ATELIER — CLIP Test</h2>
+<p>Upload a clothing photo to test AI recognition.</p>
+
+<input type="file" id="photo" accept="image/*">
+<img id="preview" alt="Uploaded clothing">
+<p id="status">Waiting for photo...</p>
+<div id="results"></div>
+
+<script type="module">
+import { pipeline, env } from
+  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+env.allowLocalModels = false;
+
+const MODEL = 'Xenova/clip-vit-base-patch32';
+
+const input = document.getElementById('photo');
+const preview = document.getElementById('preview');
+const status = document.getElementById('status');
+const results = document.getElementById('results');
+
+let classifier;
+
+const categories = [
+  ['hoodie', 'a hooded sweatshirt with sleeves'],
+  ['t-shirt', 'a short sleeved t-shirt'],
+  ['long sleeve shirt', 'a long sleeved shirt'],
+  ['sweatshirt', 'a crewneck sweatshirt without a hood'],
+  ['sweater', 'a knitted sweater'],
+  ['cardigan', 'an open front cardigan sweater'],
+  ['tank top', 'a sleeveless tank top'],
+  ['crop top', 'a cropped short top'],
+  ['blouse', 'a womens blouse'],
+  ['button-up shirt', 'a collared button-up shirt'],
+  ['polo shirt', 'a collared polo shirt'],
+  ['sweatpants', 'a pair of loose fleece sweatpants with an elastic waistband and two long pant legs'],
+  ['joggers', 'a pair of jogger pants with elastic ankle cuffs'],
+  ['jeans', 'a pair of denim jeans with two long pant legs'],
+  ['cargo pants', 'a pair of cargo pants with large side pockets'],
+  ['trousers', 'a pair of formal trousers with two long pant legs'],
+  ['leggings', 'a pair of tight stretchy leggings'],
+  ['yoga pants', 'a pair of stretchy yoga pants'],
+  ['shorts', 'a pair of shorts with two short pant legs'],
+  ['athletic shorts', 'a pair of loose athletic shorts'],
+  ['skirt', 'a skirt with no separate pant legs'],
+  ['mini skirt', 'a short mini skirt'],
+  ['maxi skirt', 'a long flowing maxi skirt'],
+  ['dress', 'a one piece dress with a skirt'],
+  ['mini dress', 'a short mini dress'],
+  ['maxi dress', 'a long maxi dress'],
+  ['jumpsuit', 'a one piece jumpsuit with long pant legs'],
+  ['romper', 'a one piece romper with short pant legs'],
+  ['overalls', 'a pair of bib overalls'],
+  ['jacket', 'an outerwear jacket'],
+  ['denim jacket', 'a denim jacket'],
+  ['leather jacket', 'a leather jacket'],
+  ['blazer', 'a tailored blazer'],
+  ['coat', 'a long outerwear coat'],
+  ['vest', 'a sleeveless vest'],
+  ['sneakers', 'a pair of sneakers'],
+  ['boots', 'a pair of boots'],
+  ['heels', 'a pair of high heel shoes'],
+  ['sandals', 'a pair of sandals'],
+  ['flats', 'a pair of flat shoes'],
+  ['loafers', 'a pair of loafers'],
+  ['dress shoes', 'a pair of formal dress shoes'],
+  ['hat', 'a baseball cap or hat'],
+  ['beanie', 'a knitted beanie hat'],
+  ['scarf', 'a scarf worn around the neck'],
+  ['belt', 'a clothing belt'],
+  ['handbag', 'a handbag or purse'],
+  ['backpack', 'a backpack']
+];
+
+function showResults(items) {
+  results.replaceChildren();
+
+  items.slice(0, 5).forEach(item => {
+    const percent = (item.score * 100).toFixed(1);
+
+    const div = document.createElement('div');
+    div.className = 'result';
+
+    const heading = document.createElement('strong');
+    heading.textContent =
+      item.label.toUpperCase() + ' — ' + percent + '%';
+
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+
+    const fill = document.createElement('div');
+    fill.className = 'fill';
+    fill.style.width = percent + '%';
+
+    bar.appendChild(fill);
+    div.append(heading, bar);
+    results.appendChild(div);
+  });
+
+  const note = document.createElement('p');
+  note.className = 'note';
+  note.textContent =
+    'Experimental AI rankings. Percentages are relative to the ' +
+    'candidate descriptions, not guaranteed accuracy.';
+  results.appendChild(note);
+}
+
+input.addEventListener('change', async () => {
+  const file = input.files[0];
+  if (!file) return;
+
+  input.disabled = true;
+  results.replaceChildren();
+
+  const imageUrl = URL.createObjectURL(file);
+  preview.src = imageUrl;
+  preview.style.display = 'block';
+
+  try {
+    status.textContent = 'Loading CLIP AI model...';
+
+    classifier ??= await pipeline(
+      'zero-shot-image-classification',
+      MODEL,
+      { device: 'wasm' }
+    );
+
+    status.textContent = 'Analyzing clothing...';
+
+    const descriptions = categories.map(
+      item => 'a photo of ' + item[1]
+    );
+
+    const output = await classifier(
+      imageUrl,
+      descriptions
+    );
+
+    const formatted = output.map(item => {
+      const index = descriptions.indexOf(item.label);
+      return {
+        label: index >= 0 ? categories[index][0] : item.label,
+        score: item.score
+      };
+    });
+
+    status.textContent = 'Analysis complete!';
+    showResults(formatted);
+
+  } catch (error) {
+    status.textContent = 'Error: ' + error.message;
+    console.error(error);
+  } finally {
+    input.disabled = false;
+    URL.revokeObjectURL(imageUrl);
+  }
+});
+</script>
+</body>
+</html>
