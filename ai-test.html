@@ -1,15 +1,54 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ATELIER AI Test</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 30px;
+    max-width: 700px;
+    margin: auto;
+  }
+  #results {
+    margin-top: 20px;
+  }
+  .result {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  .result strong {
+    display: block;
+    margin-bottom: 5px;
+  }
+  .bar {
+    height: 8px;
+    background: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .fill {
+    height: 100%;
+    background: #222;
+  }
+  #preview {
+    max-width: 250px;
+    max-height: 300px;
+    object-fit: contain;
+    display: none;
+    margin-top: 15px;
+  }
+</style>
 </head>
-<body style="font-family:Arial;padding:30px">
+<body>
+
 <h2>ATELIER — AI Clothing Test</h2>
 <p>Upload a clothing photo to test automatic recognition.</p>
 
 <input type="file" id="photo" accept="image/*">
+<img id="preview" alt="Uploaded clothing">
 <p id="status">Waiting for photo...</p>
 <div id="results"></div>
 
@@ -20,18 +59,76 @@ import { pipeline } from
 const status = document.getElementById('status');
 const results = document.getElementById('results');
 const input = document.getElementById('photo');
+const preview = document.getElementById('preview');
 
 let classifier;
+
+// Men's, women's, and unisex clothing
+const categories = [
+  'hoodie',
+  't-shirt',
+  'long sleeve shirt',
+  'crewneck sweatshirt',
+  'sweater',
+  'cardigan',
+  'tank top',
+  'crop top',
+  'blouse',
+  'button-up shirt',
+  'polo shirt',
+  'tunic',
+  'jeans',
+  'sweatpants',
+  'joggers',
+  'leggings',
+  'yoga pants',
+  'trousers',
+  'cargo pants',
+  'shorts',
+  'athletic shorts',
+  'skirt',
+  'mini skirt',
+  'maxi skirt',
+  'dress',
+  'mini dress',
+  'maxi dress',
+  'jumpsuit',
+  'romper',
+  'jacket',
+  'denim jacket',
+  'leather jacket',
+  'blazer',
+  'coat',
+  'vest',
+  'sneakers',
+  'boots',
+  'heels',
+  'sandals',
+  'flats',
+  'loafers',
+  'dress shoes',
+  'hat',
+  'beanie',
+  'scarf',
+  'belt',
+  'handbag',
+  'backpack'
+];
 
 input.addEventListener('change', async () => {
   const file = input.files[0];
   if (!file) return;
 
   input.disabled = true;
-  results.textContent = '';
+  results.replaceChildren();
+
+  const imageUrl = URL.createObjectURL(file);
+  preview.src = imageUrl;
+  preview.style.display = 'block';
 
   try {
-    status.textContent = 'Loading AI model (first time may take a while)...';
+    status.textContent =
+      'Loading AI model (first time may take a while)...';
 
     classifier ??= await pipeline(
       'zero-shot-image-classification',
@@ -40,31 +137,44 @@ input.addEventListener('change', async () => {
 
     status.textContent = 'Analyzing clothing...';
 
-    const imageUrl = URL.createObjectURL(file);
+    const labels = categories.map(
+      category => `a photo of ${category}`
+    );
 
-    try {
-      const output = await classifier(imageUrl, [
-        'a photo of a hoodie',
-        'a photo of a t-shirt',
-        'a photo of a crewneck sweatshirt',
-        'a photo of jeans',
-        'a photo of pants',
-        'a photo of shorts',
-        'a photo of a jacket',
-        'a photo of sneakers',
-        'a photo of a sweater'
-      ]);
+    const output = await classifier(imageUrl, labels);
 
-      status.textContent = 'Analysis complete!';
-      results.textContent = JSON.stringify(output.slice(0, 5), null, 2);
-    } finally {
-      URL.revokeObjectURL(imageUrl);
-    }
+    status.textContent = 'Analysis complete!';
+
+    output.slice(0, 5).forEach(item => {
+      const percentage = (item.score * 100).toFixed(1);
+      const category = item.label.replace('a photo of ', '');
+
+      const result = document.createElement('div');
+      result.className = 'result';
+
+      const heading = document.createElement('strong');
+      heading.textContent =
+        `${category.toUpperCase()} — ${percentage}%`;
+
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+
+      const fill = document.createElement('div');
+      fill.className = 'fill';
+      fill.style.width = percentage + '%';
+
+      bar.appendChild(fill);
+      result.appendChild(heading);
+      result.appendChild(bar);
+      results.appendChild(result);
+    });
+
   } catch (error) {
     status.textContent = 'Error: ' + error.message;
     console.error(error);
   } finally {
     input.disabled = false;
+    URL.revokeObjectURL(imageUrl);
   }
 });
 </script>
