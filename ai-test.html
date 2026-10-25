@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATELIER AI Test</title>
+</head>
+<body style="font-family:Arial;padding:30px">
+<h2>ATELIER — AI Clothing Test</h2>
+<p>Upload a clothing photo to test automatic recognition.</p>
+
+<input type="file" id="photo" accept="image/*">
+<p id="status">Waiting for photo...</p>
+<div id="results"></div>
+
+<script type="module">
+import { pipeline } from
+'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+const status = document.getElementById('status');
+const results = document.getElementById('results');
+const input = document.getElementById('photo');
+
+let classifier;
+
+input.addEventListener('change', async () => {
+  const file = input.files[0];
+  if (!file) return;
+
+  input.disabled = true;
+  results.textContent = '';
+
+  try {
+    status.textContent = 'Loading AI model (first time may take a while)...';
+
+    classifier ??= await pipeline(
+      'zero-shot-image-classification',
+      'Xenova/clip-vit-base-patch32'
+    );
+
+    status.textContent = 'Analyzing clothing...';
+
+    const imageUrl = URL.createObjectURL(file);
+
+    try {
+      const output = await classifier(imageUrl, [
+        'a photo of a hoodie',
+        'a photo of a t-shirt',
+        'a photo of a crewneck sweatshirt',
+        'a photo of jeans',
+        'a photo of pants',
+        'a photo of shorts',
+        'a photo of a jacket',
+        'a photo of sneakers',
+        'a photo of a sweater'
+      ]);
+
+      status.textContent = 'Analysis complete!';
+      results.textContent = JSON.stringify(output.slice(0, 5), null, 2);
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
+  } catch (error) {
+    status.textContent = 'Error: ' + error.message;
+    console.error(error);
+  } finally {
+    input.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
