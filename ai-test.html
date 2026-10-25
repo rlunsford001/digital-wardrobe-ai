@@ -4,47 +4,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ATELIER AI Test</title>
+<title>ATELIER AI Test v2</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    padding: 30px;
-    max-width: 700px;
-    margin: auto;
-  }
-  #results {
-    margin-top: 20px;
-  }
-  .result {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-  }
-  .result strong {
-    display: block;
-    margin-bottom: 5px;
-  }
-  .bar {
-    height: 8px;
-    background: #eee;
-    border-radius: 5px;
-    overflow: hidden;
-  }
-  .fill {
-    height: 100%;
-    background: #222;
-  }
-  #preview {
-    max-width: 250px;
-    max-height: 300px;
-    object-fit: contain;
-    display: none;
-    margin-top: 15px;
-  }
+body {
+  font-family: Arial, sans-serif;
+  padding: 30px;
+  max-width: 700px;
+  margin: auto;
+}
+#preview {
+  max-width: 250px;
+  max-height: 300px;
+  object-fit: contain;
+  display: none;
+  margin-top: 15px;
+}
+#results { margin-top: 20px; }
+.result {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+.result strong {
+  display: block;
+  margin-bottom: 5px;
+}
+.bar {
+  height: 8px;
+  background: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  background: #222;
+}
+.note {
+  color: #666;
+  font-size: 13px;
+}
 </style>
 </head>
 <body>
 
-<h2>ATELIER — AI Clothing Test</h2>
+<h2>ATELIER — AI Clothing Test v2</h2>
 <p>Upload a clothing photo to test automatic recognition.</p>
 
 <input type="file" id="photo" accept="image/*">
@@ -63,57 +65,61 @@ const preview = document.getElementById('preview');
 
 let classifier;
 
-// Men's, women's, and unisex clothing
-const categories = [
-  'hoodie',
-  't-shirt',
-  'long sleeve shirt',
-  'crewneck sweatshirt',
-  'sweater',
-  'cardigan',
-  'tank top',
-  'crop top',
-  'blouse',
-  'button-up shirt',
-  'polo shirt',
-  'tunic',
-  'jeans',
-  'sweatpants',
-  'joggers',
-  'leggings',
-  'yoga pants',
-  'trousers',
-  'cargo pants',
-  'shorts',
-  'athletic shorts',
-  'skirt',
-  'mini skirt',
-  'maxi skirt',
-  'dress',
-  'mini dress',
-  'maxi dress',
-  'jumpsuit',
-  'romper',
-  'jacket',
-  'denim jacket',
-  'leather jacket',
-  'blazer',
-  'coat',
-  'vest',
-  'sneakers',
-  'boots',
-  'heels',
-  'sandals',
-  'flats',
-  'loafers',
-  'dress shoes',
-  'hat',
-  'beanie',
-  'scarf',
-  'belt',
-  'handbag',
-  'backpack'
-];
+const groups = {
+  'tops': [
+    'hoodie', 't-shirt', 'long sleeve shirt',
+    'crewneck sweatshirt', 'sweater', 'cardigan',
+    'tank top', 'crop top', 'blouse',
+    'button-up shirt', 'polo shirt'
+  ],
+  'bottoms': [
+    'sweatpants', 'joggers', 'jeans',
+    'cargo pants', 'trousers', 'leggings',
+    'yoga pants', 'shorts', 'athletic shorts',
+    'skirt', 'mini skirt', 'maxi skirt'
+  ],
+  'dresses and one-piece outfits': [
+    'dress', 'mini dress', 'maxi dress',
+    'jumpsuit', 'romper', 'overalls'
+  ],
+  'outerwear': [
+    'jacket', 'denim jacket', 'leather jacket',
+    'blazer', 'coat', 'vest'
+  ],
+  'footwear': [
+    'sneakers', 'boots', 'heels',
+    'sandals', 'flats', 'loafers', 'dress shoes'
+  ],
+  'accessories': [
+    'hat', 'beanie', 'scarf', 'belt',
+    'handbag', 'backpack'
+  ]
+};
+
+function showResults(items) {
+  results.replaceChildren();
+
+  items.forEach(item => {
+    const percent = (item.score * 100).toFixed(1);
+    const div = document.createElement('div');
+    div.className = 'result';
+
+    const heading = document.createElement('strong');
+    heading.textContent =
+      item.label.toUpperCase() + ' — ' + percent + '%';
+
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+
+    const fill = document.createElement('div');
+    fill.className = 'fill';
+    fill.style.width = percent + '%';
+
+    bar.appendChild(fill);
+    div.append(heading, bar);
+    results.appendChild(div);
+  });
+}
 
 input.addEventListener('change', async () => {
   const file = input.files[0];
@@ -127,47 +133,64 @@ input.addEventListener('change', async () => {
   preview.style.display = 'block';
 
   try {
-    status.textContent =
-      'Loading AI model (first time may take a while)...';
+    status.textContent = 'Loading AI model...';
 
     classifier ??= await pipeline(
       'zero-shot-image-classification',
       'Xenova/clip-vit-base-patch32'
     );
 
-    status.textContent = 'Analyzing clothing...';
+    status.textContent = 'Stage 1: Identifying clothing group...';
 
-    const labels = categories.map(
-      category => `a photo of ${category}`
+    const groupNames = Object.keys(groups);
+    const groupDescriptions = groupNames.map(
+      name => 'a product photo of ' + name + ' clothing'
     );
 
-    const output = await classifier(imageUrl, labels);
+    const groupResults = await classifier(
+      imageUrl,
+      groupDescriptions
+    );
 
-    status.textContent = 'Analysis complete!';
+    // Choose the most likely broad clothing group.
+    const bestGroupIndex = groupDescriptions.indexOf(
+      groupResults[0].label
+    );
 
-    output.slice(0, 5).forEach(item => {
-      const percentage = (item.score * 100).toFixed(1);
-      const category = item.label.replace('a photo of ', '');
+    if (bestGroupIndex === -1) {
+      throw new Error('Could not identify clothing group');
+    }
 
-      const result = document.createElement('div');
-      result.className = 'result';
+    const bestGroup = groupNames[bestGroupIndex];
 
-      const heading = document.createElement('strong');
-      heading.textContent =
-        `${category.toUpperCase()} — ${percentage}%`;
+    status.textContent =
+      'Stage 2: Identifying specific clothing item...';
 
-      const bar = document.createElement('div');
-      bar.className = 'bar';
+    const itemDescriptions = groups[bestGroup].map(
+      name => 'a product photo of ' + name
+    );
 
-      const fill = document.createElement('div');
-      fill.className = 'fill';
-      fill.style.width = percentage + '%';
+    const itemResults = await classifier(
+      imageUrl,
+      itemDescriptions
+    );
 
-      bar.appendChild(fill);
-      result.appendChild(heading);
-      result.appendChild(bar);
-      results.appendChild(result);
-    });
+    const formatted = itemResults.slice(0, 5).map(item => ({
+      label: item.label.replace('a product photo of ', ''),
+      score: item.score
+    }));
+
+    status.textContent =
+      'Analysis complete! Group: ' + bestGroup;
+
+    showResults(formatted);
+
+    const note = document.createElement('p');
+    note.className = 'note';
+    note.textContent =
+      'Experimental AI predictions. Percentages are relative ' +
+      'to the categories tested in stage 2, not guaranteed accuracy.';
+    results.appendChild(note);
 
   } catch (error) {
     status.textContent = 'Error: ' + error.message;
