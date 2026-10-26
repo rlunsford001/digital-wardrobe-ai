@@ -219,6 +219,13 @@ header{padding:18px}
   <label for="productLink">Import clothing from a link</label>
   <input id="productLink" type="url" placeholder="Paste a StockX, Nike, or other product link">
   <button id="importProduct" type="button">Import from link</button>
+  <div id="importPhotoPreview" hidden style="margin-top:16px;">
+  <img id="importPhotoImage" alt="Imported clothing"
+       style="max-width:220px;width:100%;border-radius:12px;">
+  <div>
+    <button id="removeImportPhoto" type="button">Remove photo</button>
+  </div>
+</div>
 </div>
 
   <div class="manual-fields">
@@ -659,6 +666,13 @@ $('manualAdd').disabled=false;
 $('importProduct').onclick = async () => {
   const link = $('productLink').value.trim();
   const button = $('importProduct');
+window.atelierImportedPhoto = '';
+
+$('removeImportPhoto').onclick = () => {
+window.atelierImportedPhoto = '';
+  $('importPhotoImage').removeAttribute('src');
+  $('importPhotoPreview').hidden = true;
+};
 
   if (!link) {
     msg('Paste a product link first.');
@@ -681,6 +695,16 @@ $('importProduct').onclick = async () => {
     );
 
     const product = await response.json();
+window.atelierImportedPhoto = '';
+
+if (response.ok && product.image) {
+window.atelierImportedPhoto = product.image;
+$('importPhotoImage').src = window.atelierImportedPhoto;
+  $('importPhotoPreview').hidden = false;
+} else {
+  $('importPhotoImage').removeAttribute('src');
+  $('importPhotoPreview').hidden = true;
+}
 
     if (!response.ok) {
       throw new Error(product.error || 'Import failed.');
