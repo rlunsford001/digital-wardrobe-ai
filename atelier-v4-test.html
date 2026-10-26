@@ -622,7 +622,7 @@ type,
 color,
 pattern,
 category,
-photos:[]
+photos: window.atelierImportedPhoto ? [window.atelierImportedPhoto] : []
 };
 
 clothes.push(piece);
@@ -1523,6 +1523,7 @@ document.getElementById("useProductPhoto").addEventListener("click", () => {
 
   image.onload = () => {
     preview.hidden = false;
+    window.atelierImportedPhoto = url;
   };
 
   image.onerror = () => {
