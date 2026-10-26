@@ -214,7 +214,14 @@ header{padding:18px}
 <button id="productSearch" type="button">Search Google Shopping</button>
 </div>
 <p class="muted">For now, search opens in a new tab. Automatic product results inside ATELIER are coming later.</p>
-<div class="manual-fields">
+
+<div>
+  <label for="productLink">Import clothing from a link</label>
+  <input id="productLink" type="url" placeholder="Paste a StockX, Nike, or other product link">
+  <button id="importProduct" type="button">Import from link</button>
+</div>
+
+  <div class="manual-fields">
 <div><label for="manualBrand">Brand</label><input id="manualBrand" placeholder="Nike"></div>
 <div><label for="manualType">Clothing type</label><input id="manualType" placeholder="Hoodie"></div>
 <div><label for="manualColor">Color</label><input id="manualColor" placeholder="Black"></div>
@@ -646,7 +653,66 @@ $('manualAdd').disabled=false;
 }
 };
 
-/* CLEANER CLOTHING CARDS */
+
+/* IMPORT CLOTHING FROM PRODUCT LINK */
+
+$('importProduct').onclick = async () => {
+  const link = $('productLink').value.trim();
+  const button = $('importProduct');
+
+  if (!link) {
+    msg('Paste a product link first.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Identifying clothing...';
+
+  try {
+    const response = await fetch(
+      'https://atelier-product-importer.rlunsford001.workers.dev/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url: link })
+      }
+    );
+
+    const product = await response.json();
+
+    if (!response.ok) {
+      throw new Error(product.error || 'Import failed.');
+    }
+
+    // Fill the editable clothing fields
+    $('manualBrand').value = product.brand || '';
+    $('manualType').value = product.type || '';
+    $('manualColor').value = product.color || '';
+    $('manualPattern').value = product.pattern || '';
+    $('manualName').value = product.name || '';
+
+    const category = product.category || 'top';
+    const categoryField = $('manualCategory');
+
+    if ([...categoryField.options].some(
+      option => option.value === category
+    )) {
+      categoryField.value = category;
+    }
+
+    msg('Clothing identified! Review the details before saving.');
+
+  } catch (error) {
+    msg(error.message || 'Could not import clothing.');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Import from link';
+  }
+};
+
+  /* CLEANER CLOTHING CARDS */
 
 function render(){
 const root=$('items');
