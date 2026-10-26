@@ -220,6 +220,13 @@ header{padding:18px}
   <input id="productLink" type="url" placeholder="Paste a StockX, Nike, or other product link">
   <button id="importProduct" type="button">Import from link</button>
   <button id="searchProductPhoto" type="button">🔎 Find product photo</button>
+  <input
+  id="productPhotoUrl"
+  type="url"
+  placeholder="Paste product photo URL here"
+  style="margin-top:10px;width:100%;"
+/>
+<button id="useProductPhoto" type="button">Use this photo</button>
   <div id="importPhotoPreview" hidden style="margin-top:16px;">
   <img id="importPhotoImage" alt="Imported clothing"
        style="max-width:220px;width:100%;border-radius:12px;">
@@ -1502,6 +1509,28 @@ document.getElementById("searchProductPhoto").addEventListener("click", () => {
     "_blank",
     "noopener,noreferrer"
   );
+});
+document.getElementById("useProductPhoto").addEventListener("click", () => {
+  const url = document.getElementById("productPhotoUrl").value.trim();
+
+  if (!url.startsWith("https://")) {
+    alert("Please paste a valid HTTPS image URL.");
+    return;
+  }
+
+  const image = document.getElementById("importPhotoImage");
+  const preview = document.getElementById("importPhotoPreview");
+
+  image.onload = () => {
+    preview.hidden = false;
+  };
+
+  image.onerror = () => {
+    preview.hidden = true;
+    alert("This image couldn't load. Try another image URL.");
+  };
+
+  image.src = url;
 });
 </script>
 
