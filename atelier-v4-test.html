@@ -770,7 +770,7 @@ let img=null;
 
 if(imagePath){
 img=document.createElement('img');
-img.src=photoSrc(imagePath);
+img.src=imagePath.startsWith('https://') ? imagePath : photoSrc(imagePath);
 img.alt=piece.name||'Clothing item';
 card.append(img);
 }else{
