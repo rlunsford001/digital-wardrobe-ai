@@ -6,24 +6,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ATELIER — Your Digital Closet</title>
 <style>
-:root{--bg:#f8f9fa;--ink:#202124;--gold:#ad916b;--muted:#73777c;--line:#e9eaec}
+:root{--bg:#ffffff;--ink:#172b42;--gold:#b9e2ff;--muted:#64748b;--line:#e4edf5}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
 header{background:white;border-bottom:1px solid var(--line);padding:21px max(22px,calc((100vw - 1120px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}
 .brand{font:normal 24px Georgia,serif;letter-spacing:.25em}
-header small{color:#898989;letter-spacing:.14em;font-size:10px}
+.header-auth{display:flex;align-items:center;gap:10px}
+.header-auth button{padding:9px 15px;font-size:13px;font-weight:600}
 button,select,input{font:inherit;border:1px solid #dfe0e3;padding:10px 12px;background:white;color:var(--ink);border-radius:9px;max-width:100%}
 button{cursor:pointer}
-button.primary{background:#202124;color:white;border-color:#202124;padding:13px 18px}
+button.primary{background:#b9e2ff;color:#172b42;border-color:#b9e2ff;padding:13px 18px;font-weight:600}
 button:hover{opacity:.83}
 button:disabled{opacity:.5;cursor:wait}
 [hidden]{display:none!important}
 .muted{color:var(--muted);font-size:13px;line-height:1.6}
 .eyebrow{color:var(--gold);letter-spacing:.2em;font-size:11px;text-transform:uppercase;font-weight:bold}
-.welcome{max-width:1120px;margin:auto;padding:85px 24px 110px;min-height:75vh;display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:60px}
-.welcome h1{font:normal clamp(45px,7vw,78px) Georgia,serif;line-height:1.1;margin:20px 0}
+.welcome{max-width:1120px;margin:auto;padding:65px 24px 80px;min-height:60vh;display:block}
+.welcome h1{font:normal clamp(38px,6vw,68px) Arial,sans-serif;letter-spacing:-.045em;line-height:1.08;margin:20px 0;font-weight:750}
 .welcome p{color:var(--muted);line-height:1.85;max-width:510px}
-.welcome-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.welcome-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
 .visual{background:#eeebe5;min-height:390px;border-radius:22px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;border:1px solid #e8e2d8;text-align:center;padding:25px}
 .visual .monogram{font:normal 105px Georgia,serif;color:#b6a58c}
 .visual span{font-size:11px;letter-spacing:.22em;color:#8c7c69}
@@ -119,7 +120,10 @@ header{padding:18px}
 
 <header>
 <span class="brand">ATELIER</span>
-<small>YOUR PERSONAL WARDROBE</small>
+<nav class="header-auth">
+  <button id="headerLogin">Log in</button>
+  <button id="headerSignup" class="primary">Sign up</button>
+</nav>
 </header>
 
 <div id="message" role="status" aria-live="polite"></div>
@@ -128,17 +132,13 @@ header{padding:18px}
 <div>
 <div class="eyebrow">Your style, all in one place</div>
 <h1>Your closet,<br>reimagined.</h1>
-<p>A beautiful home for everything you wear. Curate your collection, explore new combinations, and make every outfit feel effortless.</p>
+<p>Your wardrobe, all in one place. Discover new outfits, experiment with your style, and make the most of the clothes you already own.</p>
 <div class="welcome-actions">
 <button class="primary" id="welcomeSignup">Create an account</button>
 <button id="welcomeLogin">Log in</button>
 <button id="welcomeDemo">Explore demo</button>
 </div>
 <p class="muted">Try it free. No account required for demo mode.</p>
-</div>
-<div class="visual" aria-hidden="true">
-<div class="monogram">A</div>
-<span>THE ART OF GETTING DRESSED</span>
 </div>
 </section>
 
@@ -351,6 +351,8 @@ $('authSwitch').hidden=next==='recovery';
 $('welcomeSignup').onclick=()=>setAuth('signup');
 $('welcomeLogin').onclick=()=>setAuth('login');
 $('welcomeDemo').onclick=()=>openCloset('demo');
+  $('headerLogin').onclick=()=>setAuth('login');
+$('headerSignup').onclick=()=>setAuth('signup');
 $('authSwitch').onclick=()=>setAuth(authMode==='signup'?'login':'signup');
 $('forgotBtn').onclick=()=>setAuth('reset');
 $('authBack').onclick=()=>show('welcome');
