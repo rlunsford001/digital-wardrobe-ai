@@ -219,6 +219,7 @@ header{padding:18px}
   <label for="productLink">Import clothing from a link</label>
   <input id="productLink" type="url" placeholder="Paste a StockX, Nike, or other product link">
   <button id="importProduct" type="button">Import from link</button>
+  <button id="searchProductPhoto" type="button">🔎 Find product photo</button>
   <div id="importPhotoPreview" hidden style="margin-top:16px;">
   <img id="importPhotoImage" alt="Imported clothing"
        style="max-width:220px;width:100%;border-radius:12px;">
@@ -1483,6 +1484,25 @@ await openCloset('cloud');
   }, true);
 
 })();
+document.getElementById("searchProductPhoto").addEventListener("click", () => {
+  const brand = document.getElementById("manualBrand").value.trim();
+  const name = document.getElementById("manualName").value.trim();
+  const type = document.getElementById("manualType").value.trim();
+
+  const search = [brand, name, type].filter(Boolean).join(" ");
+
+  if (!search) {
+    alert("Import a product first!");
+    return;
+  }
+
+  window.open(
+    "https://www.google.com/search?tbm=isch&q=" +
+      encodeURIComponent(search),
+    "_blank",
+    "noopener,noreferrer"
+  );
+});
 </script>
 
 </body>
