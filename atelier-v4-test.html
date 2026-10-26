@@ -622,7 +622,9 @@ type,
 color,
 pattern,
 category,
-photos: window.atelierImportedPhoto ? [window.atelierImportedPhoto] : []
+photos: document.getElementById('importPhotoPreview').hidden
+  ? []
+  : [document.getElementById('importPhotoImage').src],
 };
 
 clothes.push(piece);
