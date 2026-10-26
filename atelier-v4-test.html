@@ -426,6 +426,7 @@ return false;
 }
 
 async function openCloset(next){
+  sessionStorage.setItem('atelierLastPage', next);
 mode=next;
 photoUrls={};
 $('filter').value='all';
@@ -1187,6 +1188,9 @@ const {data:{session}}=await client.auth.getSession();
 if(session?.user){
 user=session.user;
 await openCloset('cloud');
+}
+if (!session?.user && sessionStorage.getItem('atelierLastPage') === 'demo') {
+  await openCloset('demo');
 }
 })();
 </script>
