@@ -1543,5 +1543,48 @@ document.getElementById("useProductPhoto").addEventListener("click", () => {
 });
 </script>
 
+<!-- ATELIER Mobile Navigation -->
+<nav id="atelierMobileNav" class="atelier-mobile-nav">
+  <button type="button" data-tab="home">⌂ Home</button>
+  <button type="button" data-tab="wardrobe">♧ Wardrobe</button>
+  <button type="button" data-tab="stylist">✦ AI Stylist</button>
+  <button type="button" data-tab="profile">♙ Profile</button>
+</nav>
+
+<style>
+  .atelier-mobile-nav {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .atelier-mobile-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      justify-content: space-around;
+      align-items: center;
+      padding: 14px 8px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
+      background: #ffffff;
+      border-top: 1px solid #e5edf7;
+      z-index: 9999;
+    }
+
+    .atelier-mobile-nav button {
+      background: transparent;
+      border: none;
+      color: #243b53;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    body {
+      padding-bottom: 85px;
+    }
+  }
+</style>
+
 </body>
 </html>
