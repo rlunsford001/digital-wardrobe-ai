@@ -114,6 +114,67 @@ header{padding:18px}
 .search-add .manual-fields{grid-template-columns:1fr}
 .item-photo-placeholder{height:150px}
 }
+  
+/* ATELIER Home Dashboard */
+.atelier-home {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+
+.home-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #64748b;
+}
+
+.atelier-home h2 {
+  font-size: clamp(24px, 5vw, 36px);
+  letter-spacing: -1px;
+  margin: 12px 0 6px;
+}
+
+.home-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 28px;
+}
+
+.home-card {
+  background: #f7faff;
+  border: 1px solid #e5edf7;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+.home-card h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+.home-card p {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.home-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.home-stats .home-card {
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .atelier-home {
+    padding: 22px 16px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -162,6 +223,39 @@ header{padding:18px}
 <button class="linkbtn" id="authBack">← Back to welcome</button>
 </div>
 </section>
+
+<!-- ATELIER Home Dashboard -->
+<div id="homeView" hidden>
+  <main class="atelier-home">
+    <p class="home-label">ATELIER / HOME</p>
+    <h2>What are we wearing today?</h2>
+    <p class="home-subtitle">Your style starts here.</p>
+
+    <section class="home-card">
+      <h3>Today's inspiration ✨</h3>
+      <p>Discover new ways to style the clothes you own.</p>
+      <button type="button" id="homeCreateOutfit">
+        Create an Outfit →
+      </button>
+    </section>
+
+    <section class="home-stats">
+      <div class="home-card">
+        <h3 id="homeClothesCount">0</h3>
+        <p>Wardrobe items</p>
+      </div>
+
+      <div class="home-card">
+        <h3 id="homeCreditsCount">—</h3>
+        <p>AI outfits available</p>
+      </div>
+    </section>
+
+    <button type="button" id="homeOpenWardrobe">
+      View My Wardrobe →
+    </button>
+  </main>
+</div>
 
 <div id="closetView" hidden>
 <section class="hero">
@@ -318,12 +412,27 @@ $('message').textContent=text||'';
 }
 
 function show(view){
-for(const id of ['welcome','authView','closetView']){
+
+for(const id of ['welcome','authView','homeView','closetView']){
+
 $(id).hidden=id!==view;
 }
 msg('');
 window.scrollTo(0,0);
 }
+
+function openHome() {
+  show('homeView');
+  $('homeClothesCount').textContent = clothes.length;
+}
+
+$('homeOpenWardrobe').onclick = () => {
+  show('closetView');
+};
+
+$('homeCreateOutfit').onclick = () => {
+  alert('AI Stylist is coming soon!');
+};
 
 function setAuth(next){
 authMode=next;
@@ -452,7 +561,15 @@ $('closetNotice').textContent='Your account wardrobe is stored privately in Supa
 $('exitBtn').textContent='Log out';
 }
 
-show('closetView');
+
+
+if (next === 'cloud') {
+  openHome();
+} else {
+  show('closetView');
+}
+
+
 render();
 
 if(next==='cloud')await loadCloud();
@@ -1585,6 +1702,24 @@ document.getElementById("useProductPhoto").addEventListener("click", () => {
     }
   }
 </style>
+
+<script>
+document.querySelectorAll('#atelierMobileNav [data-tab]').forEach(button => {
+  button.addEventListener('click', () => {
+    const tab = button.dataset.tab;
+
+    if (tab === 'home') {
+      openHome();
+    } else if (tab === 'wardrobe') {
+      show('closetView');
+    } else if (tab === 'stylist') {
+      alert('AI Stylist is coming soon!');
+    } else if (tab === 'profile') {
+      alert('Profile is coming soon!');
+    }
+  });
+});
+</script>
 
 </body>
 </html>
