@@ -205,6 +205,9 @@ header{padding:18px}
     <button id="menuWardrobe" type="button">My Wardrobe</button>
     <button id="menuStylist" type="button">✦ AI Stylist</button>
     <button id="menuProfile" type="button">Profile</button>
+    
+<button id="menuOwner" type="button" hidden>♛ Owner Dashboard</button>
+
 <button id="menuLogout" type="button" style="margin-top:35px;color:#c0392b;">Log Out</button>
   </nav>
 </aside>
@@ -285,6 +288,20 @@ header{padding:18px}
     <p class="home-label">ATELIER / PROFILE</p>
     <h2>My Profile</h2>
     <p class="home-subtitle">Your account, your preferences, your style.</p>
+  </main>
+</div>
+
+<!-- ATELIER Owner Dashboard -->
+<div id="ownerView" hidden>
+  <main class="atelier-home">
+    <p class="home-label">ATELIER / ADMIN</p>
+    <h2>Owner Dashboard</h2>
+    <p class="home-subtitle">Manage your members and your platform.</p>
+
+    <h3>Membership Management</h3>
+    <div id="ownerUsers">
+      Loading members...
+    </div>
   </main>
 </div>
 
@@ -446,7 +463,9 @@ $('message').textContent=text||'';
 
 function show(view){
 
-for(const id of ['welcome','authView','homeView','closetView','profileView']){
+
+for(const id of ['welcome','authView','homeView','closetView','profileView','ownerView']){
+
 
     $(id).hidden = id !== view;
   }
@@ -505,6 +524,24 @@ $('menuStylist').onclick = () => {
 $('menuProfile').onclick = () => {
   closeSlideMenu();
   show('profileView');
+};
+
+$('menuOwner').onclick = async () => {
+  if (!user || mode !== 'cloud') return;
+
+  const { data, error } = await client
+    .from('app_owners')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error || !data) {
+    alert('Owner access required.');
+    return;
+  }
+
+  closeSlideMenu();
+  show('ownerView');
 };
 
 function openHome() {
@@ -659,9 +696,23 @@ if (next === 'cloud') {
 render();
 
 if(next==='cloud')await loadCloud();
+  
+if (next === 'cloud' && user) {
+  const { data, error } = await client
+    .from('app_owners')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  $('menuOwner').hidden = !!error || !data;
+} else {
+  $('menuOwner').hidden = true;
+}
+
 }
 
 $('exitBtn').onclick=async()=>{
+  $('menuOwner').hidden = true;
 if(mode==='cloud'&&client){
 const {error}=await client.auth.signOut();
 if(error){
