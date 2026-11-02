@@ -205,6 +205,7 @@ header{padding:18px}
     <button id="menuWardrobe" type="button">My Wardrobe</button>
     <button id="menuStylist" type="button">✦ AI Stylist</button>
     <button id="menuProfile" type="button">Profile</button>
+<button id="menuLogout" type="button" style="margin-top:35px;color:#c0392b;">Log Out</button>
   </nav>
 </aside>
 <div id="message" role="status" aria-live="polite"></div>
@@ -657,6 +658,11 @@ mode='welcome';
 clothes=[];
 photoUrls={};
 show('welcome');
+};
+
+$('menuLogout').onclick = () => {
+  closeSlideMenu();
+  $('exitBtn').click();
 };
 
 function infer(name){
