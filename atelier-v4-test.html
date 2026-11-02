@@ -411,15 +411,21 @@ function msg(text){
 $('message').textContent=text||'';
 }
 
+
 function show(view){
+  for(const id of ['welcome','authView','homeView','closetView']){
+    $(id).hidden = id !== view;
+  }
 
-for(const id of ['welcome','authView','homeView','closetView']){
+  $('headerLogin').hidden = !!user && mode === 'cloud';
+  $('headerSignup').hidden = !!user && mode === 'cloud';
 
-$(id).hidden=id!==view;
+$('atelierMobileNav').hidden = !['homeView', 'closetView'].includes(view);
+
+  msg('');
+  window.scrollTo(0,0);
 }
-msg('');
-window.scrollTo(0,0);
-}
+
 
 function openHome() {
   show('homeView');
@@ -1672,6 +1678,10 @@ document.getElementById("useProductPhoto").addEventListener("click", () => {
   .atelier-mobile-nav {
     display: none;
   }
+
+.atelier-mobile-nav[hidden] {
+  display: none !important;
+}
 
   @media (max-width: 768px) {
     .atelier-mobile-nav {
