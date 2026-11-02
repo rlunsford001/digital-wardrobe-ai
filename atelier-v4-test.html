@@ -705,6 +705,7 @@ if (next === 'cloud' && user) {
     .maybeSingle();
 
   $('menuOwner').hidden = !!error || !data;
+  console.log('ATELIER OWNER CHECK:', { data, error });
 } else {
   $('menuOwner').hidden = true;
 }
