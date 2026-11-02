@@ -1491,12 +1491,6 @@ const savedPage = sessionStorage.getItem('atelierLastPage');
 
 await openCloset('cloud');
 
-if (savedPage === 'ownerView') {
-  show('ownerView');
-  await loadOwnerMembers();
-} else if (['homeView', 'closetView', 'profileView'].includes(savedPage)) {
-  show(savedPage);
-}
 }
 if (!session?.user && sessionStorage.getItem('atelierLastPage') === 'demo') {
   await openCloset('demo');
