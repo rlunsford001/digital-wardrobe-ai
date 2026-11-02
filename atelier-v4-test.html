@@ -551,7 +551,7 @@ async function loadOwnerMembers() {
 
   try {
     const { data, error } = await client
-      .from('profiles')
+.from('memberships')
       .select('*')
       .limit(100);
 
@@ -568,7 +568,7 @@ async function loadOwnerMembers() {
       const row = document.createElement('div');
       row.style.padding = '14px 0';
       row.style.borderBottom = '1px solid #e5eaf0';
-      row.textContent = member.email || member.username || member.id || 'Member';
+row.textContent = `Member: ${member.user_id} | Plan: ${member.plan || 'free'}`;
       container.appendChild(row);
     });
   } catch (error) {
