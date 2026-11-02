@@ -180,13 +180,33 @@ header{padding:18px}
 <body>
 
 <header>
-<span class="brand">ATELIER</span>
+<div style="display:flex;align-items:center;gap:16px;">
+  <button id="menuToggle" type="button" aria-label="Open menu" style="border:none;background:transparent;font-size:25px;padding:4px;cursor:pointer;">☰</button>
+  <span class="brand">ATELIER</span>
+</div>
 <nav class="header-auth">
   <button id="headerLogin">Log in</button>
   <button id="headerSignup" class="primary">Sign up</button>
 </nav>
 </header>
+<div id="menuOverlay" hidden
+     style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9998;"></div>
 
+<aside id="slideMenu" hidden
+       style="position:fixed;top:0;left:0;bottom:0;width:280px;max-width:85vw;background:white;z-index:9999;padding:28px;box-shadow:8px 0 30px rgba(0,0,0,.1);">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:35px;">
+    <strong style="letter-spacing:3px;color:#172b42;">ATELIER</strong>
+    <button id="menuClose" type="button" aria-label="Close menu">✕</button>
+  </div>
+
+  <nav style="display:grid;gap:12px;">
+    <button id="menuHome" type="button">⌂ Home</button>
+    <button id="menuWardrobe" type="button">My Wardrobe</button>
+    <button id="menuStylist" type="button">✦ AI Stylist</button>
+    <button id="menuProfile" type="button">Profile</button>
+  </nav>
+</aside>
 <div id="message" role="status" aria-live="polite"></div>
 
 <section id="welcome" class="welcome">
@@ -426,7 +446,50 @@ $('atelierMobileNav').hidden = !['homeView', 'closetView'].includes(view);
   window.scrollTo(0,0);
 }
 
+function closeSlideMenu() {
+  $('slideMenu').classList.remove('open');
 
+  setTimeout(() => {
+    if (!$('slideMenu').classList.contains('open')) {
+      $('slideMenu').hidden = true;
+      $('menuOverlay').hidden = true;
+    }
+  }, 300);
+}
+
+$('menuToggle').onclick = () => {
+  $('slideMenu').hidden = false;
+  $('menuOverlay').hidden = false;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      $('slideMenu').classList.add('open');
+    });
+  });
+};
+
+$('menuClose').onclick = closeSlideMenu;
+$('menuOverlay').onclick = closeSlideMenu;
+
+$('menuHome').onclick = () => {
+  closeSlideMenu();
+  openHome();
+};
+
+$('menuWardrobe').onclick = () => {
+  closeSlideMenu();
+  show('closetView');
+};
+
+$('menuStylist').onclick = () => {
+  closeSlideMenu();
+  alert('AI Stylist is coming soon!');
+};
+
+$('menuProfile').onclick = () => {
+  closeSlideMenu();
+  alert('Profile is coming soon!');
+};
 function openHome() {
   show('homeView');
   $('homeClothesCount').textContent = clothes.length;
@@ -1711,6 +1774,33 @@ document.getElementById("useProductPhoto").addEventListener("click", () => {
       padding-bottom: 85px;
     }
   }
+  #slideMenu {
+  display: block;
+  transform: translateX(-105%);
+  transition: transform 0.3s ease;
+}
+
+#slideMenu.open {
+  transform: translateX(0);
+}
+
+#slideMenu[hidden],
+#menuOverlay[hidden] {
+  display: none !important;
+}
+
+#slideMenu nav button {
+  text-align: left;
+  padding: 14px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+#slideMenu nav button:hover {
+  background: #e9f2ff;
+}
 </style>
 
 <script>
