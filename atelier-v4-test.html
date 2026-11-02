@@ -278,6 +278,17 @@ header{padding:18px}
   </main>
 </div>
 
+  
+<!-- ATELIER Profile Page -->
+<div id="profileView" hidden>
+  <main class="atelier-home">
+    <p class="home-label">ATELIER / PROFILE</p>
+    <h2>My Profile</h2>
+    <p class="home-subtitle">Your account, your preferences, your style.</p>
+  </main>
+</div>
+
+
 <div id="closetView" hidden>
 <section class="hero">
 <div class="eyebrow" id="closetEyebrow">Your style, all in one place</div>
@@ -434,14 +445,17 @@ $('message').textContent=text||'';
 
 
 function show(view){
-  for(const id of ['welcome','authView','homeView','closetView']){
+
+for(const id of ['welcome','authView','homeView','closetView','profileView']){
+
     $(id).hidden = id !== view;
   }
 
   $('headerLogin').hidden = !!user && mode === 'cloud';
   $('headerSignup').hidden = !!user && mode === 'cloud';
 
-$('atelierMobileNav').hidden = !['homeView', 'closetView'].includes(view);
+
+$('atelierMobileNav').hidden = !['homeView','closetView','profileView'].includes(view);
 
   msg('');
   window.scrollTo(0,0);
@@ -487,10 +501,12 @@ $('menuStylist').onclick = () => {
   alert('AI Stylist is coming soon!');
 };
 
+
 $('menuProfile').onclick = () => {
   closeSlideMenu();
-  alert('Profile is coming soon!');
+  show('profileView');
 };
+
 function openHome() {
   show('homeView');
   $('homeClothesCount').textContent = clothes.length;
@@ -1821,7 +1837,9 @@ document.querySelectorAll('#atelierMobileNav [data-tab]').forEach(button => {
     } else if (tab === 'stylist') {
       alert('AI Stylist is coming soon!');
     } else if (tab === 'profile') {
-      alert('Profile is coming soon!');
+
+show('profileView');
+
     }
   });
 });
