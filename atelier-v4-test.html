@@ -467,7 +467,8 @@ function show(view){
 for(const id of ['welcome','authView','homeView','closetView','profileView','ownerView']){
 
 
-    $(id).hidden = id !== view;
+const element = $(id);
+if (element) element.hidden = id !== view;
   }
 
   $('headerLogin').hidden = !!user && mode === 'cloud';
