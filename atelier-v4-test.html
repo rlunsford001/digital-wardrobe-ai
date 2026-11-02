@@ -694,7 +694,6 @@ return false;
 }
 
 async function openCloset(next){
-  sessionStorage.setItem('atelierLastPage', next);
 mode=next;
 photoUrls={};
 $('filter').value='all';
@@ -721,7 +720,12 @@ $('exitBtn').textContent='Log out';
 
 
 if (next === 'cloud') {
-  openHome();
+  const savedPage = sessionStorage.getItem('atelierLastPage');
+  if (['profileView', 'ownerView'].includes(savedPage)) {
+    show(savedPage);
+  } else {
+    openHome();
+  }
 } else {
   show('closetView');
 }
