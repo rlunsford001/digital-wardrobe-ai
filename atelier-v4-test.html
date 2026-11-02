@@ -462,7 +462,9 @@ $('message').textContent=text||'';
 
 
 function show(view){
-
+  if (['homeView', 'closetView', 'profileView', 'ownerView'].includes(view)) {
+  sessionStorage.setItem('atelierLastPage', view);
+}
 
 for(const id of ['welcome','authView','homeView','closetView','profileView','ownerView']){
 
@@ -1482,6 +1484,13 @@ const {data:{session}}=await client.auth.getSession();
 if(session?.user){
 user=session.user;
 await openCloset('cloud');
+const savedPage = sessionStorage.getItem('atelierLastPage');
+if (['homeView', 'closetView', 'profileView'].includes(savedPage)) {
+  show(savedPage);
+} else if (savedPage === 'ownerView') {
+  await loadOwnerMembers();
+  show('ownerView');
+}
 }
 if (!session?.user && sessionStorage.getItem('atelierLastPage') === 'demo') {
   await openCloset('demo');
