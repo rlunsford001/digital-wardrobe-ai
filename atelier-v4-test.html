@@ -542,7 +542,39 @@ $('menuOwner').onclick = async () => {
 
   closeSlideMenu();
   show('ownerView');
+  await loadOwnerMembers();
 };
+
+async function loadOwnerMembers() {
+  const container = $('ownerUsers');
+  container.textContent = 'Loading members...';
+
+  try {
+    const { data, error } = await client
+      .from('profiles')
+      .select('*')
+      .limit(100);
+
+    if (error) throw error;
+
+    container.textContent = '';
+
+    if (!data || data.length === 0) {
+      container.textContent = 'No members found.';
+      return;
+    }
+
+    data.forEach(member => {
+      const row = document.createElement('div');
+      row.style.padding = '14px 0';
+      row.style.borderBottom = '1px solid #e5eaf0';
+      row.textContent = member.email || member.username || member.id || 'Member';
+      container.appendChild(row);
+    });
+  } catch (error) {
+    container.textContent = 'Unable to load members: ' + error.message;
+  }
+}
 
 function openHome() {
   show('homeView');
