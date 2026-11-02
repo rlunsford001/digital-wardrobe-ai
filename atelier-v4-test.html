@@ -723,6 +723,9 @@ if (next === 'cloud') {
   const savedPage = sessionStorage.getItem('atelierLastPage');
   if (['profileView', 'ownerView'].includes(savedPage)) {
     show(savedPage);
+    if (savedPage === 'ownerView') {
+  await loadOwnerMembers();
+}
   } else {
     openHome();
   }
