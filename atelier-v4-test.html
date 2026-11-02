@@ -1483,7 +1483,9 @@ const {data:{session}}=await client.auth.getSession();
 
 if(session?.user){
 user=session.user;
+const pageToRestore = sessionStorage.getItem('atelierLastPage');
 await openCloset('cloud');
+if (pageToRestore) sessionStorage.setItem('atelierLastPage', pageToRestore);
 const savedPage = sessionStorage.getItem('atelierLastPage');
 if (['homeView', 'closetView', 'profileView'].includes(savedPage)) {
   show(savedPage);
