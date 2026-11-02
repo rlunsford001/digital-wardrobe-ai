@@ -475,8 +475,7 @@ if (element) element.hidden = id !== view;
   $('headerSignup').hidden = !!user && mode === 'cloud';
 
 
-$('atelierMobileNav').hidden = !['homeView','closetView','profileView'].includes(view);
-
+if ($('atelierMobileNav')) $('atelierMobileNav').hidden = !['homeView','closetView','profileView'].includes(view);
   msg('');
   window.scrollTo(0,0);
 }
