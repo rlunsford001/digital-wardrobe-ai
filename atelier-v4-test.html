@@ -318,11 +318,15 @@ header{padding:18px}
 </main>
 </div>
     <section id="personalInfoEditor" class="atelier-home" hidden>
-  <h3>Personal Information</h3>
+<p class="home-label">ATELIER / ACCOUNT</p>
+<h2>Personal Information</h2>
+<p class="home-subtitle">Manage your personal details and account identity.</p>
+      <div class="personal-info-card">
   <label for="editDisplayName">Display Name</label>
   <input id="editDisplayName" type="text" placeholder="Your display name">
   <button type="button" id="saveDisplayName">Save Changes</button>
   <button type="button" id="cancelPersonalInfo">Cancel</button>
+        </div>
 </section>
 
 
@@ -1711,7 +1715,31 @@ if (!session?.user && sessionStorage.getItem('atelierLastPage') === 'demo') {
   color: #8da4bf;
   font-size: 22px;
 }
+.personal-info-card {
+  background: #f5f7fb;
+  border: 1px solid #e5eaf2;
+  border-radius: 18px;
+  padding: 28px;
+  margin-top: 24px;
+  max-width: 650px;
+}
 
+.personal-info-card label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.personal-info-card input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid #dce3ed;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
 </style>
 
 <script>
