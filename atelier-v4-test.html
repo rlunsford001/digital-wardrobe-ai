@@ -315,16 +315,15 @@ header{padding:18px}
       <div class="profile-option">Notifications <span>›</span></div>
     </section>
     
-<section id="personalInfoEditor" class="atelier-home" hidden>
+</main>
+</div>
+    <section id="personalInfoEditor" class="atelier-home" hidden>
   <h3>Personal Information</h3>
   <label for="editDisplayName">Display Name</label>
   <input id="editDisplayName" type="text" placeholder="Your display name">
   <button type="button" id="saveDisplayName">Save Changes</button>
   <button type="button" id="cancelPersonalInfo">Cancel</button>
 </section>
-
-  </main>
-</div>
 
 
 <!-- ATELIER Owner Dashboard -->
@@ -505,7 +504,7 @@ if (view === 'profileView') updateProfile();
   sessionStorage.setItem('atelierLastPage', view);
 }
 
-for(const id of ['welcome','authView','homeView','closetView','profileView','ownerView']){
+for(const id of ['welcome','authView','homeView','closetView','profileView','personalInfoEditor','ownerView']){
 
 
 const element = $(id);
@@ -635,13 +634,11 @@ function updateProfile() {
   
 $('profilePersonalInfo').onclick = () => {
   $('editDisplayName').value = $('profileName').textContent;
-  $('personalInfoEditor').hidden = false;
-  $('profileView').hidden = true;
+show('personalInfoEditor');
 };
 
 $('cancelPersonalInfo').onclick = () => {
-  $('personalInfoEditor').hidden = true;
-  $('profileView').hidden = false;
+show('profileView');
 };
 
 $('saveDisplayName').onclick = async () => {
@@ -663,8 +660,7 @@ $('saveDisplayName').onclick = async () => {
 
   user = data.user;
   updateProfile();
-  $('personalInfoEditor').hidden = true;
-  $('profileView').hidden = false;
+show('profileView');
   alert('Display name updated!');
 };
 
