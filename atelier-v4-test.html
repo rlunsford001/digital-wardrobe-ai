@@ -315,7 +315,7 @@ header{padding:18px}
       <div class="profile-option">Notifications <span>›</span></div>
     </section>
     
-<section id="personalInfoEditor" class="profile-settings" hidden>
+<section id="personalInfoEditor" class="atelier-home" hidden>
   <h3>Personal Information</h3>
   <label for="editDisplayName">Display Name</label>
   <input id="editDisplayName" type="text" placeholder="Your display name">
@@ -636,10 +636,12 @@ function updateProfile() {
 $('profilePersonalInfo').onclick = () => {
   $('editDisplayName').value = $('profileName').textContent;
   $('personalInfoEditor').hidden = false;
+  $('profileView').hidden = true;
 };
 
 $('cancelPersonalInfo').onclick = () => {
   $('personalInfoEditor').hidden = true;
+  $('profileView').hidden = false;
 };
 
 $('saveDisplayName').onclick = async () => {
@@ -662,6 +664,7 @@ $('saveDisplayName').onclick = async () => {
   user = data.user;
   updateProfile();
   $('personalInfoEditor').hidden = true;
+  $('profileView').hidden = false;
   alert('Display name updated!');
 };
 
