@@ -487,6 +487,9 @@ $('message').textContent=text||'';
 
 
 function show(view){
+  
+if (view === 'profileView') updateProfile();
+
   if (['homeView', 'closetView', 'profileView', 'ownerView'].includes(view)) {
   sessionStorage.setItem('atelierLastPage', view);
 }
@@ -606,6 +609,17 @@ row.textContent = `Member: ${member.user_id} | Plan: ${member.plan || 'free'}`;
 function openHome() {
   show('homeView');
   $('homeClothesCount').textContent = clothes.length;
+}
+
+function updateProfile() {
+  if (!user) return;
+
+  $('profileEmail').textContent = user.email || '';
+  $('profileName').textContent =
+    user.user_metadata?.display_name ||
+    user.user_metadata?.full_name ||
+    user.email?.split('@')[0] ||
+    'ATELIER Member';
 }
 
 $('homeOpenWardrobe').onclick = () => {
