@@ -301,7 +301,9 @@ header{padding:18px}
 
     <section class="profile-settings">
       <h3>Account</h3>
-      <div class="profile-option">Personal Information <span>›</span></div>
+  
+<div class="profile-option" id="profilePersonalInfo" role="button" tabindex="0">Personal Information <span>›</span></div>
+
       <div class="profile-option">Membership & Billing <span>›</span></div>
 
       <h3>My Style</h3>
@@ -312,6 +314,15 @@ header{padding:18px}
       <div class="profile-option">Privacy & Security <span>›</span></div>
       <div class="profile-option">Notifications <span>›</span></div>
     </section>
+    
+<section id="personalInfoEditor" class="profile-settings" hidden>
+  <h3>Personal Information</h3>
+  <label for="editDisplayName">Display Name</label>
+  <input id="editDisplayName" type="text" placeholder="Your display name">
+  <button type="button" id="saveDisplayName">Save Changes</button>
+  <button type="button" id="cancelPersonalInfo">Cancel</button>
+</section>
+
   </main>
 </div>
 
@@ -621,6 +632,39 @@ function updateProfile() {
     user.email?.split('@')[0] ||
     'ATELIER Member';
 }
+  
+$('profilePersonalInfo').onclick = () => {
+  $('editDisplayName').value = $('profileName').textContent;
+  $('personalInfoEditor').hidden = false;
+};
+
+$('cancelPersonalInfo').onclick = () => {
+  $('personalInfoEditor').hidden = true;
+};
+
+$('saveDisplayName').onclick = async () => {
+  const name = $('editDisplayName').value.trim();
+
+  if (!name) {
+    alert('Please enter a display name.');
+    return;
+  }
+
+  const { data, error } = await client.auth.updateUser({
+    data: { display_name: name }
+  });
+
+  if (error) {
+    alert('Could not save: ' + error.message);
+    return;
+  }
+
+  user = data.user;
+  updateProfile();
+  $('personalInfoEditor').hidden = true;
+  alert('Display name updated!');
+};
+
 
 $('homeOpenWardrobe').onclick = () => {
   show('closetView');
